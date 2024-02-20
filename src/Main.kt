@@ -2,93 +2,193 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.util.*
 
+// List to store the states of the DFA, initially containing two states: one final and one non-final
 val states = mutableListOf(
-    State(1, mutableListOf()), // Final
-    State(0, mutableListOf())  // Non-Final
+    State(1, mutableListOf()), // Final state
+    State(0, mutableListOf())  // Non-final state
 )
+
+// List to store the nodes representing states in the DFA
 val nodes = mutableListOf<Node>()
 
+// List to store the minimization table with iterations
 val table = mutableListOf<List<Pair<Int, Int>>>()
 
+// Queue to manage states during the DFA minimization process
 val stateQueue: Queue<State> = LinkedList(listOf(states[1], states[0]))
 
-
-fun main() {
-    createNodes()
-
-    addIterationStateToTheTable()
+// List to store the steps taken during the DFA minimization process
+val steps: MutableList<String> = mutableListOf()
 
 
-    while (stateQueue.isNotEmpty()) {
-        evaluateClass(stateQueue.remove())
-        addIterationStateToTheTable()
+
+// Class representing a node in the DFA, with connections to other nodes via transitions 'a' and 'b'
+class Node(val name: Int, val a: MutableList<Node>, val b: MutableList<Node>, var state: State) {
+
+    // Function to generate a string representation of the node
+    fun name(): String {
+        return "S$name"
     }
 
+    // Function to get the first node connected via transition 'a'
+    fun nodeA() = a.first()
+
+    // Function to get the first node connected via transition 'b'
+    fun nodeB() = b.first()
+
+    // Override equals method to compare nodes based on their names
+    override fun equals(other: Any?): Boolean {
+        return if (other is Node) other.name == this.name
+        else false
+    }
+
+    // Override hashCode method to generate hash code based on node's name
+    override fun hashCode(): Int {
+        return name
+    }
+
+    // Override toString method to generate a string representation of the node
+    override fun toString(): String {
+        return "Node_Name: S$name (${nodeA().name()}, ${nodeB().name()})"
+    }
+}
+
+// Class representing a state in the minimized DFA, containing a name and a list of nodes belonging to the state
+class State(val name: Int, val nodes: MutableList<Node>) {
+
+    // Function to generate a string representation of the state
+    fun name(): String {
+        return "C$name"
+    }
+
+    // Override equals method to compare states based on their names
+    override fun equals(other: Any?): Boolean {
+        return if (other is State) other.name == this.name
+        else false
+    }
+
+    // Override hashCode method to generate hash code based on state's name
+    override fun hashCode(): Int {
+        return name
+    }
+
+    // Override toString method to generate a string representation of the state
+    override fun toString(): String {
+        return "Class_Name: C$name Nodes:${nodes.map { it.name() }}"
+    }
+}
+
+
+// Main function where the DFA minimization process is initiated
+fun main() {
+    // Create nodes representing states in the DFA
+    createNodes()
+
+    // Add the initial state configuration to the minimization table
+    addIterationStateToTheTable()
+
+    // Perform DFA minimization steps until the state queue is empty
+    while (stateQueue.isNotEmpty()) {
+        // Evaluate and process the next state in the queue
+        if (evaluateState(stateQueue.remove())) {
+            // If the state evaluation results in a change, add the new state configuration to the minimization table
+            addIterationStateToTheTable()
+        }
+    }
+
+    // Print the steps taken during the DFA minimization process
+    steps.onEach(::println)
+
+    // Print the final number of classes after minimization
     println("Num of classes are: ${states.size}")
+
+    // Print the minimized DFA table with iterations
     table.forEachIndexed { index, pairs ->
         println("-------- Iteration $index ---------")
         pairs.forEach(::println)
         println()
     }
 
-
-    nodes.onEach { println(it.state.name) }
-
+    // Write the minimized DFA table to a file
     writeTableToFile()
+
+    // Write the DFA minimization steps to a file
+    writeStepsToFile()
 }
 
+// Function to add the current state configuration to the minimization table for the current iteration
 fun addIterationStateToTheTable() {
-    table.add(nodes.map { findClass(it.nodeA()).name to findClass(it.nodeB()).name })
+    // Map each node's state name based on its transitions 'a' and 'b', and add it to the table
+    table.add(nodes.map { findState(it.nodeA()).name to findState(it.nodeB()).name })
 }
 
-fun evaluateClass(currState: State) {
+
+// Function to evaluate the current state and perform necessary actions during the DFA minimization process
+fun evaluateState(currState: State): Boolean {
+    // Group nodes in the current state based on their transitions 'a' and 'b'
     val nodesGroups = currState.nodes.map { node: Node ->
-        node to Pair(findClass(node.nodeA()).name, findClass(node.nodeB()).name)
+        node to Pair(findState(node.nodeA()).name, findState(node.nodeB()).name)
     }.groupBy { it.second }
         .toList()
         .apply {
-            println("----------- Current Class {$currState} ------------")
+            // Add current state and node information to the steps' list for visualization
+            steps.add("----------- Current Class {$currState} ------------")
             this.onEach { listPair ->
-                listPair.second.onEach { println("Key: ${it.second}     \tValue: ${it.first}") }
+                listPair.second.onEach { steps.add("State(a,b): ${it.second}     \tNode: ${it.first}") }
             }
         }
 
+    // If there are multiple groups of nodes based on transitions, perform state evaluation
     if (nodesGroups.size > 1) {
-        // Flush current nodes in state
+        // Flush current nodes in the state
         currState.nodes.clear()
 
-        // Add back the first subdivided class
+        // Add back the nodes from the first subdivided class
         currState.nodes.addAll(nodesGroups.first().second.map { it.first }.toMutableList())
 
-        val new = mutableListOf<State>()
-        // All other subdivisions should be made into their own classes
+        // Create new classes for other subdivisions and add them to the state queue
+        val newStates = mutableListOf<State>()
         for (ng in nodesGroups.drop(1)) {
-            val newClass = newClasses(ng.second.map { it.first })
-            stateQueue.add(newClass)
-            states.add(newClass)
-            new.add(newClass)
+            val newState = newState(ng.second.map { it.first })
+            stateQueue.add(newState)
+            states.add(newState)
+            newStates.add(newState)
         }
 
+        // Add current state and new classes information to the steps' list for visualization
         stateQueue.add(currState)
-        println("Divided into ${new.map { it.name() }.toMutableList().apply { this.add(currState.name()) }}\n\n")
-        return
+        steps.add("Divided into ${newStates.map { it.name() }.toMutableList().apply { this.add(currState.name()) }}\n\n")
+        return true
     }
-    println("not divided\n\n")
+
+    // If no subdivisions are made, add information to the steps' list for visualization and return false
+    steps.add("not divided\n\n")
+    return false
 }
 
-fun newClasses(nodesForNewClass: List<Node>): State {
+// Function to create a new state with the given nodes
+fun newState(nodesForNewClass: List<Node>): State {
+    // Create a new state with a unique name
     val newClass = State(states.size, mutableListOf())
+    // Add the provided nodes to the new state and update their state reference
     newClass.nodes.addAll(nodesForNewClass.onEach { it.state = newClass }.toMutableList())
     return newClass
 }
 
-fun findClass(node: Node): State {
-    for (clas in states) {
-        if (clas.nodes.contains(node)) return clas
+
+// Function to find the state containing a given node
+fun findState(node: Node): State {
+    // Iterate through all states
+    for (state in states) {
+        // Check if the state's node list contains the given node
+        if (state.nodes.contains(node)) return state
     }
+    // If no state is found, throw an exception
     throw IllegalStateException("Cannot find class for $node")
 }
 
+
+// Function to create nodes representing states in the DFA based on specifications provided in a text file
 fun createNodes() {
     // Specify the file path
     val filePath = "dfa_nodes.txt"
@@ -101,13 +201,14 @@ fun createNodes() {
         throw FileNotFoundException("File not found: $filePath")
     }
 
-    var rawNodes: List<Pair<Int, Int>> = emptyList();
+    var rawNodes: List<Pair<Int, Int>> = emptyList()
     try {
         // Open the file for reading using a BufferedReader
-        val bufferedReader = file.bufferedReader().apply {
+        file.bufferedReader().apply {
             // Read the file line by line
             this.useLines { lines ->
                 rawNodes = lines.map { line ->
+                    // Split each line by ":" and trim whitespace, then convert to pairs of integers
                     val num = line.split(":").map { it.trim().toInt() }
                     num[0] to num[1]
                 }.toList()
@@ -119,96 +220,79 @@ fun createNodes() {
         println("Error reading the file: ${e.message}")
     }
 
+    // Create nodes based on the number of raw nodes specified
     rawNodes.indices.forEach { i -> nodes.add(Node(i, mutableListOf(), mutableListOf(), states[0])) }
 
+    // Connect nodes based on transitions specified in the raw node data
     rawNodes.forEachIndexed { index, pair ->
         nodes[index].a.add(nodes[pair.first])
         nodes[index].b.add(nodes[pair.second])
+        // Set the initial state for the first two nodes as the non-final state
         if (index < 2) nodes[index].state = states[1]
     }
 
+    // Add each node to the list of nodes belonging to its respective state
     nodes.forEach {
         it.state.nodes.add(it)
     }
 }
 
+// Function to write the minimized DFA table to a file
 fun writeTableToFile() {
-    val fileName = "Table.txt" // Specify the file name
+    // Specify the file name
+    val tableFile = "Table.txt"
 
     // Create a File instance
-    val outputFile = File(fileName)
+    val tableOutputFile = File(tableFile)
 
     // Write content to the file
     try {
         // Open the file for writing using a BufferedWriter
-        val bufferedWriter = outputFile.bufferedWriter()
+        val tableBufferedWriter = tableOutputFile.bufferedWriter()
 
         // Write content to the file
-        bufferedWriter.write("Num of classes are: ${states.size}\n")
+        tableBufferedWriter.write("Num of classes are: ${states.size}\n")
+        tableBufferedWriter.write("--------- State Names -------------\n")
+        // Write state names to the file
+        nodes.onEach { tableBufferedWriter.write("${it.state.name}\n") }
+        tableBufferedWriter.write("\n")
+
+        // Write minimized DFA table to the file, along with iteration numbers
         table.forEachIndexed { index, pairs ->
-            bufferedWriter.write("-------- Iteration $index ---------\n")
-            pairs.forEach { bufferedWriter.write("$it\n") }
-            bufferedWriter.write("\n")
+            tableBufferedWriter.write("-------- Iteration ${index + 1} ---------\n")
+            pairs.forEach { tableBufferedWriter.write("${it.first}\t${it.second}\n") }
+            tableBufferedWriter.write("\n")
         }
 
         // Close the BufferedWriter
-        bufferedWriter.close()
+        tableBufferedWriter.close()
 
-        println("Data has been written to $fileName.")
+        println("Table has been written to ${tableOutputFile.absoluteFile}.")
     } catch (e: Exception) {
-        println("Error writing to the file: ${e.message}")
+        println("Error writing table to the file: ${e.message}")
+    }
+}
+// Function to write the DFA minimization steps to a file
+fun writeStepsToFile() {
+    // Specify the file name
+    val stepsFile = "Steps.txt"
+
+    // Create a File instance
+    val stepsOutputFile = File(stepsFile)
+
+    try {
+        // Open the file for writing using a BufferedWriter
+        val stepsBufferedWriter = stepsOutputFile.bufferedWriter()
+
+        // Write each step to the file
+        steps.forEach { stepsBufferedWriter.write("$it\n") }
+
+        // Close the BufferedWriter
+        stepsBufferedWriter.close()
+
+        println("Steps have been written to ${stepsOutputFile.absoluteFile}.")
+    } catch (e: Exception) {
+        println("Error writing Steps to the file: ${e.message}")
     }
 }
 
-class Node(val name: Int, val a: MutableList<Node>, val b: MutableList<Node>, var state: State) {
-
-    fun name(): String {
-        return "S$name"
-    }
-
-    fun nodeA() = a.first()
-    fun nodeB() = b.first()
-
-    override fun equals(other: Any?): Boolean {
-        return if (other is Node) other.name == this.name
-        else false
-    }
-
-
-    override fun hashCode(): Int {
-        return name
-    }
-
-//    override fun toString(): String {
-//        return "Node_Name: S$name Connectors: { a:${nodeA().name()}, b:${nodeB().name()} } Class: { $class_ }"
-//    }
-
-    override fun toString(): String {
-        return "Node_Name: S$name (${nodeA().name()}, ${nodeB().name()})"
-    }
-}
-
-class State(val name: Int, val nodes: MutableList<Node>) {
-
-
-    fun name(): String {
-        return "C$name"
-    }
-
-    override fun equals(other: Any?): Boolean {
-        return if (other is State) other.name == this.name
-        else false
-    }
-
-    override fun hashCode(): Int {
-        return name
-    }
-
-    override fun toString(): String {
-        return "Class_Name: C$name Nodes:${nodes.map { it.name() }}"
-    }
-
-//    override fun toString(): String {
-//        return "Class_Name: C$name"
-//    }
-}

@@ -1,0 +1,85 @@
+----------- Current Class {Class_Name: C0 Nodes:[S0, S1]} ------------
+State(a,b): (0, 0)     	Node: Node_Name: S0 (S1, S0)
+State(a,b): (1, 1)     	Node: Node_Name: S1 (S2, S3)
+Divided into [C2, C0]
+
+
+----------- Current Class {Class_Name: C1 Nodes:[S2, S3, S4, S5, S6, S7, S8, S9, S10, S11, S12]} ------------
+State(a,b): (1, 0)     	Node: Node_Name: S2 (S4, S0)
+State(a,b): (1, 0)     	Node: Node_Name: S4 (S7, S0)
+State(a,b): (1, 0)     	Node: Node_Name: S5 (S8, S0)
+State(a,b): (1, 0)     	Node: Node_Name: S6 (S8, S0)
+State(a,b): (1, 0)     	Node: Node_Name: S7 (S7, S0)
+State(a,b): (1, 0)     	Node: Node_Name: S12 (S4, S0)
+State(a,b): (1, 1)     	Node: Node_Name: S3 (S5, S6)
+State(a,b): (1, 1)     	Node: Node_Name: S8 (S2, S9)
+State(a,b): (1, 1)     	Node: Node_Name: S9 (S10, S6)
+State(a,b): (1, 1)     	Node: Node_Name: S10 (S11, S9)
+State(a,b): (1, 1)     	Node: Node_Name: S11 (S12, S9)
+Divided into [C3, C1]
+
+
+----------- Current Class {Class_Name: C2 Nodes:[S1]} ------------
+State(a,b): (1, 3)     	Node: Node_Name: S1 (S2, S3)
+not divided
+
+
+----------- Current Class {Class_Name: C0 Nodes:[S0]} ------------
+State(a,b): (2, 0)     	Node: Node_Name: S0 (S1, S0)
+not divided
+
+
+----------- Current Class {Class_Name: C3 Nodes:[S3, S8, S9, S10, S11]} ------------
+State(a,b): (1, 1)     	Node: Node_Name: S3 (S5, S6)
+State(a,b): (1, 3)     	Node: Node_Name: S8 (S2, S9)
+State(a,b): (1, 3)     	Node: Node_Name: S11 (S12, S9)
+State(a,b): (3, 1)     	Node: Node_Name: S9 (S10, S6)
+State(a,b): (3, 3)     	Node: Node_Name: S10 (S11, S9)
+Divided into [C4, C5, C6, C3]
+
+
+----------- Current Class {Class_Name: C1 Nodes:[S2, S4, S5, S6, S7, S12]} ------------
+State(a,b): (1, 0)     	Node: Node_Name: S2 (S4, S0)
+State(a,b): (1, 0)     	Node: Node_Name: S4 (S7, S0)
+State(a,b): (1, 0)     	Node: Node_Name: S7 (S7, S0)
+State(a,b): (1, 0)     	Node: Node_Name: S12 (S4, S0)
+State(a,b): (4, 0)     	Node: Node_Name: S5 (S8, S0)
+State(a,b): (4, 0)     	Node: Node_Name: S6 (S8, S0)
+Divided into [C7, C1]
+
+
+----------- Current Class {Class_Name: C4 Nodes:[S8, S11]} ------------
+State(a,b): (1, 5)     	Node: Node_Name: S8 (S2, S9)
+State(a,b): (1, 5)     	Node: Node_Name: S11 (S12, S9)
+not divided
+
+
+----------- Current Class {Class_Name: C5 Nodes:[S9]} ------------
+State(a,b): (6, 7)     	Node: Node_Name: S9 (S10, S6)
+not divided
+
+
+----------- Current Class {Class_Name: C6 Nodes:[S10]} ------------
+State(a,b): (4, 5)     	Node: Node_Name: S10 (S11, S9)
+not divided
+
+
+----------- Current Class {Class_Name: C3 Nodes:[S3]} ------------
+State(a,b): (7, 7)     	Node: Node_Name: S3 (S5, S6)
+not divided
+
+
+----------- Current Class {Class_Name: C7 Nodes:[S5, S6]} ------------
+State(a,b): (4, 0)     	Node: Node_Name: S5 (S8, S0)
+State(a,b): (4, 0)     	Node: Node_Name: S6 (S8, S0)
+not divided
+
+
+----------- Current Class {Class_Name: C1 Nodes:[S2, S4, S7, S12]} ------------
+State(a,b): (1, 0)     	Node: Node_Name: S2 (S4, S0)
+State(a,b): (1, 0)     	Node: Node_Name: S4 (S7, S0)
+State(a,b): (1, 0)     	Node: Node_Name: S7 (S7, S0)
+State(a,b): (1, 0)     	Node: Node_Name: S12 (S4, S0)
+not divided
+
+
